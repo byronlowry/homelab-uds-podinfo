@@ -58,7 +58,15 @@ tasks:
           case "$PLAYWRIGHT_EXECUTOR" in
             docker)
               version=$(uds zarf tools yq -r '.devDependencies."@playwright/test"' package.json)
+              gateway_args=()
+              if [[ -n "${UDS_GATEWAY_IP:-}" ]]; then
+                gateway_args+=(
+                  "--add-host=podinfo.uds.dev:${UDS_GATEWAY_IP}"
+                  "--add-host=sso.uds.dev:${UDS_GATEWAY_IP}"
+                )
+              fi
               exec docker run --rm \
+                "${gateway_args[@]}" \
                 --network=host \
                 --shm-size=1g \
                 --security-opt seccomp=unconfined \
