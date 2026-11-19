@@ -1,0 +1,19 @@
+# Copyright 2026 Defense Unicorns
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Defense-Unicorns-Commercial
+
+name: Lint
+
+on:
+  # This workflow is triggered on pull requests to the main branch.
+  pull_request:
+    branches: [main]
+    # milestoned is added here so that a PR can be re-triggered if it is milestoned.
+    types: [milestoned, opened, edited, synchronize]
+
+jobs:
+  validate:
+    uses: defenseunicorns/uds-common/.github/workflows/callable-lint.yaml@807de6f4efca9f51ee5e8d3e466d5f089c9eaab8 # v1.34.1
+    with:
+      # Schema freshness requires a populated package and generated schema.
+      values-check: false
+    secrets: inherit

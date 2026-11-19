@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "podinfo": {
+      "type": "object",
+      "description": "Values passed directly to the upstream Podinfo Helm chart.",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,72 @@
+# Copyright 2026 Defense Unicorns
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Defense-Unicorns-Commercial
+# yaml-language-server: $schema=https://raw.githubusercontent.com/defenseunicorns/uds-cli/refs/heads/main/tasks.schema.json
+variables:
+  - name: PLAYWRIGHT_EXECUTOR
+    default: docker
+  - name: PLAYWRIGHT_COMMAND
+    default: npx --no-install playwright
+
+tasks:
+  - name: all
+    actions:
+      - task: health-check
+      - task: ingress
+      - task: ui
+
+  # Ensure application deploys successfully and becomes available
+  - name: health-check
+    actions:
+      - description: Podinfo Health Check
+        wait:
+          cluster:
+            kind: Deployment
+            name: podinfo
+            namespace: podinfo
+            condition: Available
+
+  - name: ingress
+    actions:
+      - description: "Podinfo Ingress Status Check"
+        maxRetries: 30
+        cmd: |
+          STATUS=$(curl -L -o /dev/null -s -w "%{http_code}\n" https://podinfo.uds.dev)
+          echo "Podinfo system status: ${STATUS}"
+          if [ "$STATUS" != "200" ]; then
+            sleep 10
+            exit 1
+          fi
+
+  - name: ui
+    description: Podinfo UI Checks
+    actions:
+      - cmd: |
+          set -euo pipefail
+          case "$PLAYWRIGHT_EXECUTOR" in
+            docker)
+              version=$(uds zarf tools yq -r '.devDependencies."@playwright/test"' package.json)
+              exec docker run --rm \
+                --network=host \
+                --shm-size=1g \
+                --security-opt seccomp=unconfined \
+                --user "$(id -u):$(id -g)" \
+                -e HOME=/tmp \
+                -e NPM_CONFIG_CACHE=/tmp/.npm \
+                -e PLAYWRIGHT_BROWSERS \
+                -e BASE_URL \
+                -v "$(pwd)":/app -w /app \
+                "mcr.microsoft.com/playwright:v$version" \
+                bash -lc 'npm ci && npx playwright test'
+              ;;
+            direct)
+              exec bash -c "$PLAYWRIGHT_COMMAND test"
+              ;;
+            *)
+              echo "PLAYWRIGHT_EXECUTOR must be docker or direct: $PLAYWRIGHT_EXECUTOR" >&2
+              exit 1
+              ;;
+          esac
+        dir: tests
+        shell:
+          linux: bash
+          darwin: bash

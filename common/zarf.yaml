@@ -1,0 +1,36 @@
+# Copyright 2026 Defense Unicorns
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Defense-Unicorns-Commercial
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/defenseunicorns/zarf/main/zarf.schema.json
+kind: ZarfPackageConfig
+metadata:
+  name: podinfo-common
+  description: "UDS Podinfo Common Package"
+
+components:
+  - name: podinfo
+    required: true
+    charts:
+      - name: podinfo
+        namespace: podinfo
+        url: oci://ghcr.io/stefanprodan/charts/podinfo
+        version: 6.9.2
+        valuesFiles:
+          - ../values/common-values.yaml
+        values:
+          - sourcePath: ".podinfo"
+            targetPath: .
+            # Review chart-specific image and integration settings when selecting the application.
+            excludePaths:
+              - ".podinfo.image"
+              - ".podinfo.imagePullSecrets"
+              - ".podinfo.global.imageRegistry"
+              - ".podinfo.global.imagePullSecrets"
+              - ".podinfo.securityContext"
+              - ".podinfo.containerSecurityContext"
+              - ".podinfo.podSecurityContext"
+              - ".podinfo.crds"
+              - ".podinfo.installCRDs"
+              - ".podinfo.ingress"
+              - ".podinfo.redis"
+              - ".podinfo.serviceAccount.imagePullSecrets"

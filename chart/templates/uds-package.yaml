@@ -1,0 +1,45 @@
+# Copyright 2026 Defense Unicorns
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Defense-Unicorns-Commercial
+
+apiVersion: uds.dev/v1alpha1
+kind: Package
+metadata:
+  name: podinfo
+  namespace: {{ .Release.Namespace }}
+# Full Package CR spec reference:
+# https://docs.defenseunicorns.com/core/reference/operator--crds/packages-v1alpha1-cr/
+spec:
+  sso:
+    - name: Podinfo
+      clientId: uds-podinfo
+      redirectUris:
+        - "https://podinfo.uds.dev/login"
+      enableAuthserviceSelector:
+        app.kubernetes.io/name: podinfo
+
+  # Customize network policies and expose services via istio
+  network:
+    serviceMesh:
+      mode: ambient
+    expose:
+      - service: podinfo
+        selector:
+          app: podinfo
+        gateway: tenant
+        host: podinfo
+        port: 9898
+        uptime:
+          checks:
+            paths:
+              - /
+    allow:
+      - direction: Ingress
+        remoteGenerated: Anywhere
+
+      - direction: Egress
+        remoteGenerated: Anywhere
+
+      # Custom rules for unanticipated scenarios
+      {{- with .Values.additionalNetworkAllow }}
+      {{ toYaml . | nindent 6 }}
+      {{- end }}

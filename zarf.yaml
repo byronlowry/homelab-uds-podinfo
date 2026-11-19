@@ -1,0 +1,40 @@
+# Copyright 2026 Defense Unicorns
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Defense-Unicorns-Commercial
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/defenseunicorns/zarf/main/zarf.schema.json
+kind: ZarfPackageConfig
+metadata:
+  name: podinfo
+  description: "UDS Podinfo package"
+  version: "dev"
+  yolo: true
+  annotations:
+    dev.uds.title: Podinfo
+    dev.uds.tagline: Lightweight Kubernetes application used for upgrade rehearsals
+    dev.uds.categories: Kubernetes, Development
+    dev.uds.keywords: Podinfo, UDS, Homelab, Upgrade Testing
+    dev.uds.icon: ""
+
+variables:
+  - name: DOMAIN
+    default: "uds.dev"
+
+values:
+  files:
+    - zarf-values.yaml
+  schema: zarf-values.schema.json
+
+components:
+  - name: podinfo
+    required: true
+    description: "Deploy Podinfo"
+    import:
+      path: common
+    only:
+      flavor: upstream
+    charts:
+      - name: podinfo
+        valuesFiles:
+          - values/upstream-values.yaml
+    images:
+      - ghcr.io/stefanprodan/podinfo:6.9.2

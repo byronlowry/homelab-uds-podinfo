@@ -1,0 +1,9 @@
+{
+  "name": "uds-package-podinfo",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "^26.0.0",
+    "typescript": "^7.0.0"
+  }
+}

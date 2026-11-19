@@ -1,0 +1,85 @@
+# Configuration
+
+Podinfo supports deploy-time configuration through Zarf package values.
+
+## Table of Contents
+
+- [Package Signature Verification](#package-signature-verification)
+- [Package Values](#package-values)
+- [Additional Configuration Info Follows](#additional-configuration-info-follows)
+
+## Package Signature Verification
+
+See [Verify a Package](../README.md#verify-a-package) in the README for the first signed releases and package source paths. Replace `<version>` and `<flavor>` with your package version and flavor. For signed releases, configure the settings below to avoid signature verification failures during bundle creation.
+
+### CLI Next — `bundle.uds.hcl`
+
+```hcl
+package "podinfo" {
+  source = "oci://ghcr.io/byronlowry/podinfo:<version>-<flavor>"
+
+  signature_verification {
+    keyless {
+      certificate_identity    = "https://github.com/byronlowry/homelab-uds-podinfo/.github/workflows/release.yaml@refs/heads/main"
+      certificate_oidc_issuer = "https://token.actions.githubusercontent.com"
+    }
+  }
+}
+```
+
+### Classic — `uds-bundle.yaml`
+
+```yaml
+packages:
+  - name: "podinfo"
+    repository: ghcr.io/byronlowry/podinfo
+    ref: <version>-<flavor>
+    keylessVerification:
+      certificateIdentity: https://github.com/byronlowry/homelab-uds-podinfo/.github/workflows/release.yaml@refs/heads/main
+      certificateOIDCIssuer: https://token.actions.githubusercontent.com
+```
+
+## Package Values
+
+Application chart settings and UDS integration settings use separate top-level keys:
+
+| Key | Configures | Package default |
+| --- | --- | --- |
+| `podinfo` | [Application Helm chart](oci://ghcr.io/stefanprodan/charts/podinfo) | `{}`, preserving chart and flavor defaults |
+| `uds-podinfo-config` | UDS integration chart | `{}`, preserving chart defaults |
+
+The UDS integration chart exposes `additionalNetworkAllow`, which defaults to `[]`. It appends
+rules to the required `Package.spec.network.allow` entries. An override list replaces the previous
+custom list while preserving the required rules.
+
+Save overrides in a deployment-specific file. For example:
+
+```yaml
+# deployment-values.yaml
+"podinfo": {}
+"uds-podinfo-config":
+  additionalNetworkAllow:
+    - direction: Egress
+      remoteNamespace: dependency-namespace
+      remoteSelector:
+        app: dependency
+      port: 5432
+```
+
+Replace the example network rule with the traffic your deployment needs. Put supported application
+chart overrides under `podinfo`.
+
+Deploy with the archive you received, replacing `<package-archive>` with its path:
+
+```bash
+zarf package deploy <package-archive> --values deployment-values.yaml --features values=true
+```
+
+Keys omitted from the override file retain the packaged defaults. The generated
+`zarf-values.schema.json` defines accepted values and types. Image references, security settings,
+and other paths listed in the package's `excludePaths` remain controlled by the package.
+
+For a [UDS CLI Next bundle](https://docs.defenseunicorns.com/cli/v0-40/reference/next/bundle-uds-hcl/),
+reference the same override file through the package's `values_files` attribute.
+
+## Additional Configuration Info Follows
