@@ -27,15 +27,28 @@ tasks:
 
   - name: ingress
     actions:
-      - description: "Podinfo Ingress Status Check"
+      - description: "Podinfo unauthenticated ingress redirects to UDS SSO"
         maxRetries: 30
         cmd: |
-          STATUS=$(curl -L -o /dev/null -s -w "%{http_code}\n" https://podinfo.uds.dev)
-          echo "Podinfo system status: ${STATUS}"
-          if [ "$STATUS" != "200" ]; then
+          set -euo pipefail
+          headers=$(mktemp)
+          trap 'rm -f "$headers"' EXIT
+          status=$(curl --max-redirs 0 -D "$headers" -o /dev/null -sS -w '%{http_code}' https://podinfo.uds.dev/)
+          location=$(awk 'BEGIN { IGNORECASE=1 } /^location:/ { sub(/^[^:]+:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit }' "$headers")
+          echo "Podinfo unauthenticated status: ${status}"
+          if [ "$status" != "302" ] && [ "$status" != "303" ]; then
+            echo "Expected an authentication redirect, got ${status}" >&2
             sleep 10
             exit 1
           fi
+          case "$location" in
+            https://sso.uds.dev/*) ;;
+            *)
+              echo "Expected redirect to UDS SSO, got: ${location:-<missing>}" >&2
+              sleep 10
+              exit 1
+              ;;
+          esac
 
   - name: ui
     description: Podinfo UI Checks
@@ -54,6 +67,9 @@ tasks:
                 -e NPM_CONFIG_CACHE=/tmp/.npm \
                 -e PLAYWRIGHT_BROWSERS \
                 -e BASE_URL \
+                -e UDS_REQUIRE_EXTERNAL_CREDENTIALS \
+                -e UDS_TEST_USERNAME \
+                -e UDS_TEST_PASSWORD \
                 -v "$(pwd)":/app -w /app \
                 "mcr.microsoft.com/playwright:v$version" \
                 bash -lc 'npm ci && npx playwright test'
