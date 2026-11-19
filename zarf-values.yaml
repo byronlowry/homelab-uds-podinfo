@@ -3,3 +3,4 @@
 
 # Empty overrides preserve the chart and flavor defaults.
 "podinfo": {}
+"uds-podinfo-config": {}

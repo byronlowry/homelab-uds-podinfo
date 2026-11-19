@@ -1,6 +1,6 @@
 # UDS Package Podinfo
 
-This package deploys [Podinfo](oci://ghcr.io/stefanprodan/charts/podinfo) through a UDS/Zarf package and a UDS Next bundle.
+This package deploys [Podinfo](oci://ghcr.io/stefanprodan/charts/podinfo) on [UDS Core](https://github.com/defenseunicorns/uds-core) through a UDS/Zarf package and a UDS Next bundle.
 
 This repository is a personal training package that mirrors the UDS package
 workflow used by application teams: pull-request validation, clean installation
@@ -8,11 +8,10 @@ and upgrade testing, immutable publication, and signed release verification.
 
 ## Prerequisites
 
-The package uses Zarf YOLO compatibility mode because the shared homelab cluster is
-already controlled by Argo CD and does not run UDS Core/Zarf init. Its CI/CD,
-versioning, signing, installation tests, and upgrade tests still follow the UDS
-package-factory workflow. It may only be deployed into the isolated `podinfo`
-training namespace.
+This package requires a dedicated UDS cluster with Zarf init and UDS Core. It
+must not be deployed to the existing Argo-managed `homelab` cluster. CI uses a
+disposable UDS development cluster, and the persistent staging target uses the
+separate `homelab-uds` kubeconfig context.
 
 ## Flavors
 

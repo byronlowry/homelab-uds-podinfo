@@ -7,6 +7,11 @@
       "type": "object",
       "description": "Values passed directly to the upstream Podinfo Helm chart.",
       "additionalProperties": true
+    },
+    "uds-podinfo-config": {
+      "type": "object",
+      "description": "Values passed to the UDS Package CR integration chart.",
+      "additionalProperties": true
     }
   }
 }

@@ -36,6 +36,7 @@ tasks:
     actions:
       - task: create:test-bundle
       - task: deploy:test-bundle
+      - task: setup:keycloak-user
       - task: test:all
 
   - name: dev

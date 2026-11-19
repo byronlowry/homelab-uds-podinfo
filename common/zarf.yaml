@@ -11,6 +11,13 @@ components:
   - name: podinfo
     required: true
     charts:
+      - name: uds-podinfo-config
+        namespace: podinfo
+        version: 0.1.0
+        localPath: ../chart
+        values:
+          - sourcePath: ".uds-podinfo-config"
+            targetPath: .
       - name: podinfo
         namespace: podinfo
         url: oci://ghcr.io/stefanprodan/charts/podinfo

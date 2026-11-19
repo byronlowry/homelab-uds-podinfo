@@ -6,6 +6,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export const playwrightDir = '.playwright';
+export const authFile = `${playwrightDir}/auth/user.json`;
+
 const browserDevices = new Map([
   ['chromium', devices['Desktop Chrome']],
   ['firefox', devices['Desktop Firefox']],
@@ -38,6 +40,12 @@ export default defineConfig({
   },
 
   projects: [
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+      use: { ...browserDevices.get(browsers[0]) },
+    },
+
     ...browsers.map((browser) => {
       const device = browserDevices.get(browser);
       if (!device) {
@@ -45,8 +53,10 @@ export default defineConfig({
       }
       return {
         name: browser,
+        dependencies: ['setup'],
         use: {
           ...device,
+          storageState: authFile,
         },
       };
     }),

@@ -7,7 +7,6 @@ metadata:
   name: podinfo
   description: "UDS Podinfo package"
   version: "dev"
-  yolo: true
   annotations:
     dev.uds.title: Podinfo
     dev.uds.tagline: Lightweight Kubernetes application used for upgrade rehearsals
